@@ -1,5 +1,5 @@
 # VRChatApiTools
- A library to interact with and extend the VRChat SDK. Doesn't do anything on its own, but provides editor extension developers with tools to more easily interact with VRChat SDK data, and contains an alternate uploader that doesn't run in playmode.
+ A library to interact with and extend the VRChat SDK. Doesn't do anything on its own, but provides editor tool developers with an interface to more easily interact with VRChat SDK data, and contains an alternate uploader that doesn't run in playmode.
 
 Documentation: soon™
 
