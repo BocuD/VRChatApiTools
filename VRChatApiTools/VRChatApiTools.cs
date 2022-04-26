@@ -73,7 +73,6 @@ namespace BocuD.VRChatApiTools
         {
             uploadedWorlds = null;
             uploadedAvatars = null;
-                        
 
             ImageCache.Clear();
             currentlyFetching.Clear();
