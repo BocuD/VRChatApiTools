@@ -66,8 +66,16 @@ namespace BocuD.VRChatApiTools
             string fileMD5 = await GenerateMD5Base64(filepath, onStatus);
             
             // check if file has been changed
-            bool isPreviousUploadRetry = await CheckForExistingVersion(onStatus, fileMD5);
-            
+            bool isPreviousUploadRetry = false;
+            try
+            {
+                isPreviousUploadRetry = await CheckForExistingVersion(onStatus, fileMD5);
+            }
+            catch (Exception e)
+            {
+                if (e.Message == "The file to upload matches the remote file already.") return apiFile.GetFileURL();
+            }
+
             //generate file signature
             string signatureFilename = await GenerateSignatureFile(filepath, onStatus);
 

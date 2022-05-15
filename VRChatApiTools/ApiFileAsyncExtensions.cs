@@ -42,7 +42,7 @@ namespace BocuD.VRChatApiTools
                 OnSuccess = c =>
                 {
                     wait = false;
-                    uploadUrl = (c as ApiDictContainer)?.ResponseDictionary["url"] as string;
+                    uploadUrl = (c as ApiDictContainer)?.ResponseDictionary["url"].Value as string;
                 },
                 OnError = c => throw new Exception(c.Error)
             };
@@ -92,7 +92,7 @@ namespace BocuD.VRChatApiTools
                 OnSuccess = c =>
                 {
                     wait = false;
-                    uploadUrl = (c as ApiDictContainer)?.ResponseDictionary["url"] as string;
+                    uploadUrl = (c as ApiDictContainer)?.ResponseDictionary["url"].Value as string;
                 },
                 OnError = c => throw new Exception("Failed to start multipart upload", new Exception(c.Error))
             };
