@@ -220,7 +220,7 @@ namespace BocuD.VRChatApiTools
             if (worldInfo != null)
             {
                 apiWorld.name = worldInfo.name;
-                apiWorld.description = worldInfo.name;
+                apiWorld.description = worldInfo.description;
                 apiWorld.tags = worldInfo.tags.ToList();
                 apiWorld.capacity = worldInfo.capacity;
 
