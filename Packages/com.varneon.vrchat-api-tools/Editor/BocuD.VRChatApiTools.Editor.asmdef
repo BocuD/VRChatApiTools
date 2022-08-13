@@ -1,0 +1,19 @@
+{
+    "name": "BocuD.VRChatApiTools.Editor",
+    "references": [
+        "VRC.SDKBase",
+        "VRC.SDKBase.Editor",
+        "VRC.Udon.Serialization.OdinSerializer"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
