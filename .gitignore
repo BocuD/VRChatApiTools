@@ -6,5 +6,5 @@
 !/.README.md
 !/Packages
 /Packages/*
-!/Packages/com.varneon.vrchat-api-tools
+!/Packages/com.BocuD.vrcapitools
 /Packages/com.vrchat.core.vpm-resolver/*
