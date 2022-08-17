@@ -98,18 +98,29 @@ namespace BocuD.VRChatApiTools
             return success;
         }
 
-        public async Task UploadWorld(string assetbundlePath, string unityPackagePath, VRChatApiTools.WorldInfo worldInfo = null)
+        /// <summary>
+        /// Upload a World AssetBundle to VRChat
+        /// </summary>
+        /// <param name="assetBundlePath">World AssetBundle path</param>
+        /// <param name="unityPackagePath">UnityPackage path (can be left empty)</param>
+        /// <param name="worldInfo">Data structure containing world name, description, etc</param>
+        /// <returns>blueprint ID of the uploaded world</returns>
+        /// <exception cref="Exception"></exception>
+        public async Task<string> UploadWorld(string assetBundlePath, string unityPackagePath, VRChatApiTools.WorldInfo worldInfo = null)
         {
+            if (assetBundlePath.IsNullOrWhitespace())
+                throw new Exception("Invalid null or empty AssetBundle path provided");
+            
             VRChatApiTools.ClearCaches();
+            
             await Task.Delay(100);
-            if (!await VRChatApiTools.TryAutoLoginAsync()) return;
+            
+            if (!await VRChatApiTools.TryAutoLoginAsync()) 
+                throw new Exception("Failed to login");
             
             PipelineManager pipelineManager = VRChatApiTools.FindPipelineManager();
             if (pipelineManager == null)
-            {
-                LogError("Couldn't find Pipeline Manager");
-                return;
-            }
+                throw new Exception("Couldn't find Pipeline Manager");
 
             pipelineManager.user = APIUser.CurrentUser;
 
@@ -143,15 +154,12 @@ namespace BocuD.VRChatApiTools
             while (wait) await Task.Delay(100);
 
             if (apiWorld == null)
-            {
-                LogError("Couldn't get world record");
-                return;
-            }
+                throw new Exception("Couldn't fetch or create world record");
 
             //Prepare asset bundle
             string blueprintId = apiWorld.id;
             int version = Mathf.Max(1, apiWorld.version + 1);
-            string uploadVrcPath = PrepareVRCPathForS3(assetbundlePath, blueprintId, version, VRChatApiTools.CurrentPlatform(), ApiWorld.VERSION);
+            string uploadVrcPath = PrepareVRCPathForS3(assetBundlePath, blueprintId, version, VRChatApiTools.CurrentPlatform(), ApiWorld.VERSION);
             
             //Prepare unity package if it exists
             bool shouldUploadUnityPackage = !string.IsNullOrEmpty(unityPackagePath) && File.Exists(unityPackagePath);
@@ -166,6 +174,8 @@ namespace BocuD.VRChatApiTools
             }
 
             await UploadWorldData(apiWorld, uploadUnityPackagePath, uploadVrcPath, isUpdate, VRChatApiTools.CurrentPlatform(), worldInfo);
+            
+            return apiWorld.id;
         }
 
         public async Task UploadWorldData(ApiWorld apiWorld, string uploadUnityPackagePath, string uploadVrcPath, bool isUpdate, VRChatApiTools.Platform platform, VRChatApiTools.WorldInfo worldInfo = null)
