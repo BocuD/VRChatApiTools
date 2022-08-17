@@ -1,6 +1,4 @@
-﻿#if UNITY_EDITOR && !COMPILER_UDONSHARP
-
-using System;
+﻿using System;
 using VRC.Core;
 
 namespace BocuD.VRChatApiTools
@@ -38,4 +36,3 @@ namespace BocuD.VRChatApiTools
         }
     }
 }
-#endif

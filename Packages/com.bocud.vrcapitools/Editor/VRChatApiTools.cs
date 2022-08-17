@@ -1,6 +1,4 @@
-﻿#if UNITY_EDITOR && !COMPILER_UDONSHARP
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -514,5 +512,3 @@ namespace BocuD.VRChatApiTools
         }
     }
 }
-
-#endif
