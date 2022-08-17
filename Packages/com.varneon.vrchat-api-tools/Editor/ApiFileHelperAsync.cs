@@ -1,5 +1,3 @@
-#if UNITY_EDITOR && !COMPILER_UDONSHARP
-
 using System;
 using System.IO;
 using System.Security.Cryptography;
@@ -784,4 +782,3 @@ namespace BocuD.VRChatApiTools
         }
     }
 }
-#endif

@@ -1,6 +1,4 @@
-﻿#if UNITY_EDITOR && !COMPILER_UDONSHARP
-
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace BocuD.VRChatApiTools
 {
@@ -35,4 +33,3 @@ namespace BocuD.VRChatApiTools
         }
     }
 }
-#endif
