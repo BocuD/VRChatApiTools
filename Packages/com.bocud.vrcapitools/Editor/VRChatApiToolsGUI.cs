@@ -6,7 +6,6 @@ using UnityEditor;
 using UnityEngine;
 using VRC.Core;
 using VRC.SDKBase.Editor;
-using VRC.Udon.Serialization.OdinSerializer.Utilities;
 
 namespace BocuD.VRChatApiTools
 {
@@ -20,7 +19,7 @@ namespace BocuD.VRChatApiTools
         /// <param name="secondaryButtons">Action params that can be implemented to add extra GUI functionality to inspector</param>
         public static void DrawBlueprintInspector(string blueprintID, bool small = true, params Action[] secondaryButtons)
         {
-            if (blueprintID.IsNullOrWhitespace())
+            if (string.IsNullOrWhiteSpace(blueprintID))
             {
                 EditorGUILayout.BeginHorizontal(EditorStyles.helpBox, GUILayout.Height(108));
                 EditorGUILayout.BeginHorizontal();
