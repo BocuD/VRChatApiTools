@@ -3,7 +3,6 @@
     "references": [
         "VRC.SDKBase",
         "VRC.SDKBase.Editor",
-        "VRC.Udon.Serialization.OdinSerializer",
         "BocuD.VRChatApiTools.Runtime"
     ],
     "includePlatforms": [

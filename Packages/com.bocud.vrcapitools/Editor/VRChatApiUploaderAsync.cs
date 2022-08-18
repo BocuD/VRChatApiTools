@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using VRC.Core;
-using VRC.Udon.Serialization.OdinSerializer.Utilities;
 using Debug = UnityEngine.Debug;
 
 namespace BocuD.VRChatApiTools
@@ -108,7 +107,7 @@ namespace BocuD.VRChatApiTools
         /// <exception cref="Exception"></exception>
         public async Task<string> UploadWorld(string assetBundlePath, string unityPackagePath, VRChatApiTools.WorldInfo worldInfo = null)
         {
-            if (assetBundlePath.IsNullOrWhitespace())
+            if (string.IsNullOrWhiteSpace(assetBundlePath))
                 throw new Exception("Invalid null or empty AssetBundle path provided");
             
             VRChatApiTools.ClearCaches();
@@ -198,7 +197,7 @@ namespace BocuD.VRChatApiTools
                     VRChatApiTools.GetFriendlyWorldFileName("Asset bundle", apiWorld, platform), "Asset bundle");
             }
             
-            if (assetBundleUrl.IsNullOrWhitespace()) 
+            if (string.IsNullOrWhiteSpace(assetBundleUrl)) 
             {
                 OnStatus("Failed", "Asset bundle upload failed");
                 return;
@@ -239,8 +238,8 @@ namespace BocuD.VRChatApiTools
                 }
             }
             
-            apiWorld.assetUrl = newAssetUrl.IsNullOrWhitespace() ? apiWorld.assetUrl : newAssetUrl;
-            apiWorld.unityPackageUrl = newPackageUrl.IsNullOrWhitespace() ? apiWorld.unityPackageUrl : newPackageUrl;
+            apiWorld.assetUrl = string.IsNullOrWhiteSpace(newAssetUrl) ? apiWorld.assetUrl : newAssetUrl;
+            apiWorld.unityPackageUrl = string.IsNullOrWhiteSpace(newPackageUrl) ? apiWorld.unityPackageUrl : newPackageUrl;
             
             OnStatus("Applying Blueprint Changes");
             
@@ -306,7 +305,7 @@ namespace BocuD.VRChatApiTools
                 }
             }
 
-            if (newWorld.imageUrl.IsNullOrWhitespace())
+            if (string.IsNullOrWhiteSpace(newWorld.imageUrl))
             {
                 newWorld.imageUrl = await UploadImage(newWorld, SaveImageTemp(new Texture2D(1200, 900)));
             }

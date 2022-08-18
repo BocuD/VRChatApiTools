@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
-using VRC.Udon.Serialization.OdinSerializer.Utilities;
 
 namespace BocuD.VRChatApiTools
 {
@@ -217,7 +216,7 @@ namespace BocuD.VRChatApiTools
 
         public void SetStatus(string header, string status = null, string subStatus = null)
         {
-            AddLog($"{(_status.IsNullOrWhitespace() ? $"{_header}" : $"{_status}{(_subStatus.IsNullOrWhitespace() ? "" : $": {_subStatus}")}")}");
+            AddLog($"{(string.IsNullOrWhiteSpace(_status) ? $"{_header}" : $"{_status}{(string.IsNullOrWhiteSpace(_subStatus) ? "" : $": {_subStatus}")}")}");
 
             _header = header;
             _status = status;

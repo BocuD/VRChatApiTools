@@ -1,9 +1,7 @@
 {
     "name": "BocuD.VRChatApiTools.Runtime",
     "references": [
-        "VRC.SDKBase",
-        "VRC.SDKBase.Editor",
-        "VRC.Udon.Serialization.OdinSerializer"
+        "VRC.SDKBase"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
