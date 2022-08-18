@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using librsync.net;
 using UnityEngine;
 using VRC.Core;
-using VRC.Udon.Serialization.OdinSerializer.Utilities;
 
 using static VRC.Core.ApiFileHelper;
 using Tools = VRC.Tools;
@@ -440,7 +439,7 @@ namespace BocuD.VRChatApiTools
                 }
             });
 
-            if (result.IsNullOrWhitespace()) throw new Exception("File MD5 generation failed");
+            if (string.IsNullOrWhiteSpace(result)) throw new Exception("File MD5 generation failed");
             
             return result;
         }

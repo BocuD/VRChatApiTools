@@ -9,7 +9,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using VRC.Core;
-using VRC.SDK3.Components;
+using VRC.SDKBase;
 using Object = UnityEngine.Object;
 
 namespace BocuD.VRChatApiTools
@@ -322,7 +322,7 @@ namespace BocuD.VRChatApiTools
         {
             Scene currentScene = SceneManager.GetActiveScene();
 
-            VRCSceneDescriptor[] sceneDescriptors = Object.FindObjectsOfType<VRCSceneDescriptor>()
+            VRC_SceneDescriptor[] sceneDescriptors = Object.FindObjectsOfType<VRC_SceneDescriptor>()
                 .Where(x => x.gameObject.scene == currentScene).ToArray();
 
             if (sceneDescriptors.Length == 0) return null;
