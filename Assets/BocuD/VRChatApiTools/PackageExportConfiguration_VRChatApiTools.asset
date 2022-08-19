@@ -16,12 +16,11 @@ MonoBehaviour:
   - Name: VRChatApiTools
     ExportDirectory: F:/Documents/VRChat/PackageCache/VRChatApiTools
     FileNameTemplate: '{n}_v{v}'
-    PackageManifest: {fileID: 8385607101436470782, guid: 3eb2e1c2468e7594b97012d9f97aa60b,
-      type: 3}
+    PackageManifest: {fileID: 0}
     VersionFile: {fileID: 4900000, guid: 95d31b6c7d47d5347805a31088c2fec3, type: 3}
     AssetInclusions: []
     FolderInclusions:
-    - Folder: {fileID: 102900000, guid: 107c334855a29659707265dee0ec2de5, type: 3}
+    - Folder: {fileID: 102900000, guid: 77a3608b0a181e4438b76d50b9839f9e, type: 3}
       IncludeSubfolders: 1
       DependencyOptions: 0
       Expanded: 1
