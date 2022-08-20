@@ -194,12 +194,12 @@ namespace BocuD.VRChatApiTools
 
         private void Awake()
         {
-            Logger.statusWindow = this;
+            Logger.statusWindowHook = AddLog;
         }
 
         private void OnDestroy()
         {
-            Logger.statusWindow = null;
+            Logger.statusWindowHook = null;
             if(userConfirm)
                 failAction?.Invoke();
         }
@@ -238,7 +238,7 @@ namespace BocuD.VRChatApiTools
             _status = details;
             AddLog($"<color=red>{header}{(details.Length > 0 ? " " + details : "")}</color>");
             Repaint();
-            Logger.statusWindow = null;
+            Logger.statusWindowHook = null;
         }
 
         public void AddLog(string contents)

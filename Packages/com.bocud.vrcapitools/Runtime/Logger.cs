@@ -1,24 +1,26 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace BocuD.VRChatApiTools
 {
     public static class Logger
     {
-        public static VRChatApiToolsUploadStatus statusWindow;
+        public static Action<string> statusWindowHook;
 
         private const string prefix = "[<color=lime>VRChatApiTools</color>] ";
         
         public static void Log(string contents, Object context = null)
         {
-            if(statusWindow) statusWindow.AddLog($"<color=grey>{contents}</color>");
-            
+            statusWindowHook?.Invoke($"<color=grey>{contents}</color>");
+
             if (context != null) Debug.Log(prefix + contents, context);
             else Debug.Log(prefix + contents);
         }
 
         public static void LogWarning(string contents, Object context = null)
         {
-            if(statusWindow) statusWindow.AddLog($"<color=yellow>{contents}</color>");
+            statusWindowHook?.Invoke($"<color=yellow>{contents}</color>");
             
             if (context != null) Debug.LogWarning(prefix + contents, context);
             else Debug.LogWarning(prefix + contents);
@@ -26,7 +28,7 @@ namespace BocuD.VRChatApiTools
 
         public static void LogError(string contents, Object context = null)
         {
-            if(statusWindow) statusWindow.AddLog($"<color=red>{contents}</color>");
+            statusWindowHook?.Invoke($"<color=red>{contents}</color>");
             
             if (context != null) Debug.LogError(prefix + contents, context);
             else Debug.LogError(prefix + contents);
