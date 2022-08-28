@@ -30,41 +30,7 @@ namespace BocuD.VRChatApiTools
         
         public const string avatar_regex = "avtr_[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}";
         public const string world_regex = "wrld_[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}";
-        
-        #region Editor Tools Menu
 
-        [MenuItem("Tools/VRChatApiTools/Clear caches")]
-        public static void MIClearCaches()
-        {
-            ClearCaches();
-        }
-
-        [MenuItem("Tools/VRChatApiTools/Attempt login")]
-        public static void MILoginAttempt()
-        {
-            if (APIUser.IsLoggedIn)
-            {
-                Logger.Log("You are already logged in.");
-                return;
-            }
-            
-            Logger.Log("Attempting login...");
-            
-            VRCLogin.AttemptLogin(
-                c =>
-                {
-                    Logger.Log($"Succesfully logged in as user: {((APIUser)c.Model).displayName}");
-                },
-                        
-                c =>
-                {
-                    Logger.LogError("Automatic login failed");
-                    autoLoginFailed = true;
-                });
-        }
-        
-        #endregion
-        
         #region Fetching data
         
         public static void ClearCaches()
@@ -432,16 +398,10 @@ namespace BocuD.VRChatApiTools
             public List<string> tags = new List<string>();
             public int capacity;
         }
-
-        public enum Platform
-        {
-            Windows,
-            Android,
-            unknown
-        }
-
+        
         public static Platform CurrentPlatform()
         {
+#if UNITY_EDITOR
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
             switch (target)
             {
@@ -455,6 +415,14 @@ namespace BocuD.VRChatApiTools
                 default:
                     return Platform.unknown;
             }
+#else
+#if UNITY_ANDROID
+            return Platform.Android;
+#endif
+#if UNITY_STANDALONE_WIN
+            return Platform.Windows;
+#endif
+#endif
         }
 
         public static string ToApiString(this Platform input)
@@ -510,5 +478,12 @@ namespace BocuD.VRChatApiTools
                 }
             }
         }
+    }
+    
+    public enum Platform
+    {
+        Windows,
+        Android,
+        unknown
     }
 }

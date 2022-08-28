@@ -177,7 +177,7 @@ namespace BocuD.VRChatApiTools
             return apiWorld.id;
         }
 
-        public async Task UploadWorldData(ApiWorld apiWorld, string uploadUnityPackagePath, string uploadVrcPath, bool isUpdate, VRChatApiTools.Platform platform, VRChatApiTools.WorldInfo worldInfo = null)
+        public async Task UploadWorldData(ApiWorld apiWorld, string uploadUnityPackagePath, string uploadVrcPath, bool isUpdate, Platform platform, VRChatApiTools.WorldInfo worldInfo = null)
         {
             string unityPackageUrl = "";
             string assetBundleUrl = "";
@@ -408,7 +408,7 @@ namespace BocuD.VRChatApiTools
             return newFileUrl;
         }
 
-        private static string PrepareUnityPackageForS3(string packagePath, string blueprintId, int version, VRChatApiTools.Platform platform, AssetVersion assetVersion)
+        private static string PrepareUnityPackageForS3(string packagePath, string blueprintId, int version, Platform platform, AssetVersion assetVersion)
         {
             string uploadUnityPackagePath =
                 $"{Application.temporaryCachePath}/{blueprintId}_{version}_{Application.unityVersion}_{assetVersion.ApiVersion}_{platform.ToApiString()}_{API.GetServerEnvironmentForApiUrl()}.unitypackage";
@@ -421,7 +421,7 @@ namespace BocuD.VRChatApiTools
             return uploadUnityPackagePath;
         }
 
-        private static string PrepareVRCPathForS3(string assetBundlePath, string blueprintId, int version, VRChatApiTools.Platform platform, AssetVersion assetVersion)
+        private static string PrepareVRCPathForS3(string assetBundlePath, string blueprintId, int version, Platform platform, AssetVersion assetVersion)
         {
             string uploadVrcPath =
                 $"{Application.temporaryCachePath}/{blueprintId}_{version}_{Application.unityVersion}_{assetVersion.ApiVersion}_{platform.ToApiString()}_{API.GetServerEnvironmentForApiUrl()}{Path.GetExtension(assetBundlePath)}";

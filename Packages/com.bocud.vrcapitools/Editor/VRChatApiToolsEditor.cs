@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using UnityEditor;
 using VRC.Core;
 
@@ -39,6 +40,29 @@ namespace BocuD.VRChatApiTools
         {
             _clear?.Invoke(null, null);
         }
+
+        #region Menu Items
+        [MenuItem("Tools/VRChatApiTools/Clear caches")]
+        private static void MIClearCaches()
+        {
+            VRChatApiTools.ClearCaches();
+        }
+
+        [MenuItem("Tools/VRChatApiTools/Attempt login")]
+        private static async void MILoginAttempt()
+        {
+            if (APIUser.IsLoggedIn)
+            {
+                Logger.Log("You are already logged in.");
+                return;
+            }
+            
+            Logger.Log("Attempting login...");
+            
+            bool result = await VRChatApiTools.TryAutoLoginAsync();
+
+            Logger.Log(result ? "Login successful." : "Login failed.");
+        }
         
         [MenuItem("Tools/VRChatApiTools/Refresh data")]
         public static void RefreshData()
@@ -47,7 +71,8 @@ namespace BocuD.VRChatApiTools
             VRChatApiTools.ClearCaches();
             EditorCoroutine.Start(FetchUploadedData());
         }
-        
+        #endregion
+
         //Almost 1:1 reimplementation of SDK methods
         #region Fetch worlds and avatars owned by user
         public static IEnumerator FetchUploadedData()
