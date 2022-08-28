@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Configurations:
   - Name: VRChatApiTools
-    ExportDirectory: F:/Documents/VRChat/PackageCache/VRChatApiTools
+    ExportDirectory: C:/Users/BocuD/Downloads
     FileNameTemplate: '{n}_v{v}'
     PackageManifest: {fileID: 8385607101436470782, guid: 3eb2e1c2468e7594b97012d9f97aa60b,
       type: 3}
