@@ -7,7 +7,7 @@ For implementation examples, look at [VRBuildHelper](https://github.com/BocuD/VR
 
 ## Requirements
 - Unity 2019.4.31f1
-- VRChat SDK 3.1.5 or newer
+- Latest version of Package Manager version of VRChat SDK (installed by [VRChat Creator Companion](https://vcc.docs.vrchat.com/))
 
 # Installation
 ## Installation via Unity Package Manager (git, recommended):
