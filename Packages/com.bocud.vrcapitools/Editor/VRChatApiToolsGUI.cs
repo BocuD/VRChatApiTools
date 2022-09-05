@@ -222,6 +222,7 @@ namespace BocuD.VRChatApiTools
         private Type targetType;
         private string targetName;
         private bool confirm;
+        private string lastUserID;
 
         public static void BlueprintSelector<T>(Action<T> onComplete, bool confirm = false, string initialSelection = null) where T : ApiModel
         {
@@ -242,8 +243,10 @@ namespace BocuD.VRChatApiTools
             }
             else
             {
-                throw new ArgumentException("The specified blueprint type is not supported");
+                throw new ArgumentException("The specified ApiModel type is not supported");
             }
+
+            blueprintPicker.lastUserID = APIUser.CurrentUser?.id;
 
             blueprintPicker.onComplete = m => onComplete((T)m);
             blueprintPicker.targetType = type;
@@ -267,34 +270,61 @@ namespace BocuD.VRChatApiTools
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"{APIUser.CurrentUser.displayName}'s Uploaded {targetName}s", EditorStyles.boldLabel);
 
-            if (VRChatApiTools.uploadedAvatars == null)
+            //invalidate cache if we switched users
+            if (APIUser.CurrentUser?.id != lastUserID)
             {
-                VRChatApiTools.uploadedAvatars = new List<ApiAvatar>();
-
-                EditorCoroutine.Start(VRChatApiToolsEditor.FetchUploadedData());
+                if (APIUser.CurrentUser != null)
+                {
+                    VRChatApiTools.ClearCaches();
+                    lastUserID = APIUser.CurrentUser.id;
+                }
             }
 
-            if (VRChatApiToolsEditor.fetchingAvatars != null)
+            if (targetName == "Avatar")
             {
-                GUILayout.FlexibleSpace();
-                EditorGUILayout.LabelField("Fetching data from VRChat Api");
+                if (VRChatApiTools.uploadedAvatars == null)
+                {
+                    VRChatApiTools.uploadedAvatars = new List<ApiAvatar>();
+                    EditorCoroutine.Start(VRChatApiToolsEditor.FetchUploadedData());
+                }
+
+                if (VRChatApiToolsEditor.fetchingAvatars != null)
+                {
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.LabelField("Fetching data from VRChat Api");
+                }
+            } 
+            else if (targetName == "World")
+            {
+                if (VRChatApiTools.uploadedWorlds == null)
+                {
+                    VRChatApiTools.uploadedWorlds = new List<ApiWorld>();
+                    EditorCoroutine.Start(VRChatApiToolsEditor.FetchUploadedData());
+                }
+
+                if (VRChatApiToolsEditor.fetchingAvatars != null)
+                {
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.LabelField("Fetching data from VRChat Api");
+                }
             }
-            else
+
+            if (VRChatApiToolsEditor.fetchingWorlds == null || VRChatApiToolsEditor.fetchingAvatars == null)
             {
                 GUILayout.FlexibleSpace();
-                
+
                 if (GUILayout.Button("Enter ID", GUILayout.Width(120)))
                 {
                     if (targetName == "Avatar")
                     {
                         ManualBlueprintSelector.BlueprintSelector<ApiAvatar>(OnSelected);
-                    } 
+                    }
                     else if (targetName == "World")
                     {
                         ManualBlueprintSelector.BlueprintSelector<ApiWorld>(OnSelected);
                     }
                 }
-                
+
                 if (GUILayout.Button("Refresh", GUILayout.Width(120)))
                 {
                     VRChatApiTools.ClearCaches();
@@ -391,12 +421,12 @@ namespace BocuD.VRChatApiTools
             if (targetType == typeof(ApiWorld) && VRChatApiTools.uploadedWorlds != null)
             {
                 displayedBlueprints = VRChatApiTools.uploadedWorlds.OrderByDescending(x => x.updated_at)
-                    .Where(w => w.name.IndexOf(searchString, StringComparison.InvariantCultureIgnoreCase) >= 0).Cast<ApiModel>().ToList();
+                    .Where(w => w.name.IndexOf(searchString, StringComparison.InvariantCultureIgnoreCase) >= 0 || w.id.Contains(searchString)).Cast<ApiModel>().ToList();
             }
             else if (targetType == typeof(ApiAvatar) && VRChatApiTools.uploadedAvatars != null)
             {
                 displayedBlueprints = VRChatApiTools.uploadedAvatars.OrderByDescending(x => x.updated_at)
-                    .Where(a => a.name.IndexOf(searchString, StringComparison.InvariantCultureIgnoreCase) >= 0).Cast<ApiModel>().ToList();
+                    .Where(a => a.name.IndexOf(searchString, StringComparison.InvariantCultureIgnoreCase) >= 0 || a.id.Contains(searchString)).Cast<ApiModel>().ToList();
             }
             else
             {
@@ -459,7 +489,7 @@ namespace BocuD.VRChatApiTools
             if (!VRChatApiToolsGUI.HandleLogin(this, false)) return;
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Blueprint ID", GUILayout.Width(100));
+            EditorGUILayout.LabelField("Enter Blueprint ID", GUILayout.Width(100));
             string oldID = blueprintID;
             blueprintID = EditorGUILayout.TextField(blueprintID);
             if (oldID != blueprintID) ranFetch = false;

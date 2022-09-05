@@ -274,6 +274,8 @@ namespace BocuD.VRChatApiTools
                 autoLoginFailed = false;
                 succes = true;
                 wait = false;
+                
+                ClearCaches();
             }
 
             while (wait)
