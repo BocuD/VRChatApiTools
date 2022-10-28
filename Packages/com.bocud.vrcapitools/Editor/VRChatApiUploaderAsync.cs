@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using VRC.Core;
@@ -98,14 +99,13 @@ namespace BocuD.VRChatApiTools
         }
 
         /// <summary>
-        /// Upload a World AssetBundle to VRChat
+        /// Upload a World to VRChat
         /// </summary>
         /// <param name="assetBundlePath">World AssetBundle path</param>
         /// <param name="unityPackagePath">UnityPackage path (can be left empty)</param>
-        /// <param name="worldInfo">Data structure containing world name, description, etc</param>
+        /// <param name="worldInfo">Data structure containing name, description, etc</param>
         /// <returns>blueprint ID of the uploaded world</returns>
-        /// <exception cref="Exception"></exception>
-        public async Task<string> UploadWorld(string assetBundlePath, string unityPackagePath, VRChatApiTools.WorldInfo worldInfo = null)
+        public async Task<string> UploadWorld(string assetBundlePath, string unityPackagePath, VRChatApiTools.WorldInfo worldInfo)
         {
             if (string.IsNullOrWhiteSpace(assetBundlePath))
                 throw new Exception("Invalid null or empty AssetBundle path provided");
@@ -136,7 +136,10 @@ namespace BocuD.VRChatApiTools
                 {
                     Log("Updating an existing world.");
                     apiWorld = c.Model as ApiWorld;
+                    
                     pipelineManager.completedSDKPipeline = !string.IsNullOrEmpty(apiWorld.authorId);
+                    EditorUtility.SetDirty(pipelineManager);
+                    
                     isUpdate = true;
                     wait = false;
                 },
@@ -144,7 +147,10 @@ namespace BocuD.VRChatApiTools
                 {
                     Log("World record not found, creating a new world.");
                     apiWorld = new ApiWorld { capacity = 16 };
+                    
                     pipelineManager.completedSDKPipeline = false;
+                    EditorUtility.SetDirty(pipelineManager);
+                    
                     apiWorld.id = pipelineManager.blueprintId;
                     isUpdate = false;
                     wait = false;
@@ -156,13 +162,12 @@ namespace BocuD.VRChatApiTools
                 throw new Exception("Couldn't fetch or create world record");
 
             //Prepare asset bundle
-            string blueprintId = apiWorld.id;
             int version = Mathf.Max(1, apiWorld.version + 1);
-            string uploadVrcPath = PrepareVRCPathForS3(assetBundlePath, blueprintId, version, VRChatApiTools.CurrentPlatform(), ApiWorld.VERSION);
+            string uploadVrcPath = FormatAssetBundle(assetBundlePath, apiWorld.id, version, VRChatApiTools.CurrentPlatform(), ApiWorld.VERSION);
             
             //Prepare unity package if it exists
             bool shouldUploadUnityPackage = !string.IsNullOrEmpty(unityPackagePath) && File.Exists(unityPackagePath);
-            string uploadUnityPackagePath = shouldUploadUnityPackage ? PrepareUnityPackageForS3(unityPackagePath, blueprintId, version, VRChatApiTools.CurrentPlatform(), ApiWorld.VERSION) : "";
+            string uploadUnityPackagePath = shouldUploadUnityPackage ? FormatUnityPackage(unityPackagePath, apiWorld.id, version, VRChatApiTools.CurrentPlatform(), ApiWorld.VERSION) : "";
             if (shouldUploadUnityPackage) Logger.LogWarning("Found UnityPackage. Why are you building with future proof publish enabled?");
 
             //Assign a new blueprint ID if this is a new world
@@ -172,32 +177,100 @@ namespace BocuD.VRChatApiTools
                 apiWorld.id = pipelineManager.blueprintId;
             }
 
-            await UploadWorldData(apiWorld, uploadUnityPackagePath, uploadVrcPath, isUpdate, VRChatApiTools.CurrentPlatform(), worldInfo);
+            await UploadWorldData(apiWorld, uploadVrcPath, uploadUnityPackagePath, isUpdate, VRChatApiTools.CurrentPlatform(), worldInfo);
             
             return apiWorld.id;
         }
-
-        public async Task UploadWorldData(ApiWorld apiWorld, string uploadUnityPackagePath, string uploadVrcPath, bool isUpdate, Platform platform, VRChatApiTools.WorldInfo worldInfo = null)
+        
+        /// <summary>
+        /// Upload an Avatar to VRChat
+        /// </summary>
+        /// <param name="assetBundlePath">Avatar AssetBundle path</param>
+        /// <param name="unityPackagePath">UnityPackage path (can be left empty)</param>
+        /// <param name="avatarInfo">Data structure containing name, description, etc</param>
+        /// <returns>blueprint ID of the uploaded avatar</returns>
+        public async Task<string> UploadAvatar(string assetBundlePath, string unityPackagePath, VRChatApiTools.AvatarInfo avatarInfo)
         {
-            string unityPackageUrl = "";
-            string assetBundleUrl = "";
+            if (string.IsNullOrWhiteSpace(assetBundlePath))
+                throw new Exception("Invalid null or empty AssetBundle path provided");
+            
+            VRChatApiTools.ClearCaches();
+            
+            await Task.Delay(100);
+            
+            if (!await VRChatApiTools.TryAutoLoginAsync()) 
+                throw new Exception("Failed to login");
 
-            // upload unity package
-            if (!string.IsNullOrEmpty(uploadUnityPackagePath))
+            bool isUpdate = true;
+            bool wait = true;
+            
+            ApiAvatar apiAvatar = new ApiAvatar
             {
-                unityPackageUrl = await UploadFile(uploadUnityPackagePath,
+                id = avatarInfo.blueprintID
+            };
+            
+            apiAvatar.Fetch(
+                (c) =>
+                {
+                    Log("Updating an existing avatar.");
+                    apiAvatar = c.Model as ApiAvatar;
+
+                    isUpdate = true;
+                    wait = false;
+                },
+                (c) =>
+                {
+                    Log("Avatar record not found, creating a new avatar.");
+                    apiAvatar = new ApiAvatar();
+
+                    isUpdate = false;
+                    wait = false;
+                });
+
+            while (wait) await Task.Delay(100);
+
+            if (apiAvatar == null)
+                throw new Exception("Couldn't fetch or create avatar record");
+
+            //Prepare asset bundle
+            int version = Mathf.Max(1, apiAvatar.version + 1);
+            string uploadVrcPath = FormatAssetBundle(assetBundlePath, apiAvatar.id, version, VRChatApiTools.CurrentPlatform(), ApiAvatar.VERSION);
+            
+            //Prepare unity package if it exists
+            bool shouldUploadUnityPackage = !string.IsNullOrEmpty(unityPackagePath) && File.Exists(unityPackagePath);
+            string uploadUnityPackagePath = shouldUploadUnityPackage ? FormatUnityPackage(unityPackagePath, apiAvatar.id, version, VRChatApiTools.CurrentPlatform(), ApiWorld.VERSION) : "";
+            if (shouldUploadUnityPackage) Logger.LogWarning("Found UnityPackage. Why are you building with future proof publish enabled?");
+
+            //Assign a new blueprint ID if this is a avatar
+            if (string.IsNullOrEmpty(apiAvatar.id))
+            {
+                //todo: assign this id to pipelineManager
+                apiAvatar.id = VRChatApiTools.GenerateBlueprintID<ApiAvatar>();
+            }
+
+            await UploadAvatarData(apiAvatar, uploadVrcPath, uploadUnityPackagePath, isUpdate, VRChatApiTools.CurrentPlatform(), avatarInfo);
+            
+            return apiAvatar.id;
+        }
+
+        private async Task UploadWorldData(ApiWorld apiWorld, string assetBundlePath, string unityPackagePath, bool isUpdate, Platform platform, VRChatApiTools.WorldInfo worldInfo)
+        {
+            // upload unity package
+            if (!string.IsNullOrEmpty(unityPackagePath))
+            {
+                apiWorld.unityPackageUrl = await UploadFile(unityPackagePath,
                     isUpdate ? apiWorld.unityPackageUrl : "",
                     VRChatApiTools.GetFriendlyWorldFileName("Unity package", apiWorld, platform), "Unity package");
             }
             
             // upload asset bundle
-            if (!string.IsNullOrEmpty(uploadVrcPath))
+            if (!string.IsNullOrEmpty(assetBundlePath))
             {
-                assetBundleUrl = await UploadFile(uploadVrcPath, isUpdate ? apiWorld.assetUrl : "",
+                apiWorld.assetUrl = await UploadFile(assetBundlePath, isUpdate ? apiWorld.assetUrl : "",
                     VRChatApiTools.GetFriendlyWorldFileName("Asset bundle", apiWorld, platform), "Asset bundle");
             }
             
-            if (string.IsNullOrWhiteSpace(assetBundleUrl)) 
+            if (string.IsNullOrWhiteSpace(apiWorld.assetUrl)) 
             {
                 OnStatus("Failed", "Asset bundle upload failed");
                 return;
@@ -206,30 +279,55 @@ namespace BocuD.VRChatApiTools
             bool appliedSucces = false;
 
             if (isUpdate)
-                appliedSucces = await UpdateWorldBlueprint(apiWorld, assetBundleUrl, unityPackageUrl, worldInfo);
+                appliedSucces = await UpdateWorldBlueprint(apiWorld, worldInfo);
             else
-                appliedSucces = await CreateWorldBlueprint(apiWorld, assetBundleUrl, unityPackageUrl, worldInfo);
+                appliedSucces = await CreateWorldBlueprint(apiWorld, worldInfo);
 
-            if (appliedSucces)
-            {
-                OnUploadState(VRChatApiToolsUploadStatus.UploadState.finished);
-            }
-            else
-            {
-                OnUploadState(VRChatApiToolsUploadStatus.UploadState.failed);
-            }
+            OnUploadState(appliedSucces
+                ? VRChatApiToolsUploadStatus.UploadState.finished
+                : VRChatApiToolsUploadStatus.UploadState.failed);
         }
-
-        public async Task<bool> UpdateWorldBlueprint(ApiWorld apiWorld, string newAssetUrl, string newPackageUrl, VRChatApiTools.WorldInfo worldInfo = null)
+        
+        private async Task UploadAvatarData(ApiAvatar apiAvatar, string assetBundlePath, string unityPackagePath, bool isUpdate, Platform platform, VRChatApiTools.AvatarInfo avatarInfo)
         {
-            bool applied = false;
+            // upload unity package
+            if (!string.IsNullOrEmpty(unityPackagePath))
+            {
+                apiAvatar.unityPackageUrl = await UploadFile(unityPackagePath,
+                    isUpdate ? apiAvatar.unityPackageUrl : "",
+                    VRChatApiTools.GetFriendlyAvatarFileName("Unity package", apiAvatar.id, platform), "Unity package");
+            }
+            
+            // upload asset bundle
+            if (!string.IsNullOrEmpty(assetBundlePath))
+            {
+                apiAvatar.assetUrl = await UploadFile(assetBundlePath, isUpdate ? apiAvatar.assetUrl : "",
+                    VRChatApiTools.GetFriendlyAvatarFileName("Asset bundle", apiAvatar.id, platform), "Asset bundle");
+            }
+            
+            if (string.IsNullOrWhiteSpace(apiAvatar.assetUrl)) 
+            {
+                OnStatus("Failed", "Asset bundle upload failed");
+                return;
+            }
 
+            bool appliedSucces = false;
+
+            if (isUpdate)
+                appliedSucces = await UpdateAvatarBlueprint(apiAvatar, avatarInfo);
+            else
+                appliedSucces = await CreateAvatarBlueprint(apiAvatar, avatarInfo);
+
+            OnUploadState(appliedSucces
+                ? VRChatApiToolsUploadStatus.UploadState.finished
+                : VRChatApiToolsUploadStatus.UploadState.failed);
+        }
+        
+        public async Task<bool> UpdateWorldBlueprint(ApiWorld apiWorld, VRChatApiTools.WorldInfo worldInfo = null)
+        {
             if (worldInfo != null)
             {
-                apiWorld.name = worldInfo.name;
-                apiWorld.description = worldInfo.description;
-                apiWorld.tags = worldInfo.tags.ToList();
-                apiWorld.capacity = worldInfo.capacity;
+                apiWorld.ApplyBlueprintInfo(worldInfo);
 
                 if (worldInfo.newImagePath != "")
                 {
@@ -238,12 +336,11 @@ namespace BocuD.VRChatApiTools
                 }
             }
             
-            apiWorld.assetUrl = string.IsNullOrWhiteSpace(newAssetUrl) ? apiWorld.assetUrl : newAssetUrl;
-            apiWorld.unityPackageUrl = string.IsNullOrWhiteSpace(newPackageUrl) ? apiWorld.unityPackageUrl : newPackageUrl;
-            
             OnStatus("Applying Blueprint Changes");
             
             bool success = false;
+            bool applied = false;
+
             apiWorld.Save(c =>
             {
                 applied = true;
@@ -262,64 +359,128 @@ namespace BocuD.VRChatApiTools
             return success;
         }
 
-        private async Task<bool> CreateWorldBlueprint(ApiWorld apiWorld, string newAssetUrl, string newPackageUrl, VRChatApiTools.WorldInfo worldInfo = null)
+        private async Task<bool> UpdateAvatarBlueprint(ApiAvatar apiAvatar, VRChatApiTools.AvatarInfo avatarInfo)
         {
-            bool success = false;
-            
-            PipelineManager pipelineManager = VRChatApiTools.FindPipelineManager();
-            if (pipelineManager == null)
+            if (avatarInfo != null)
             {
-                LogError("Couldn't find Pipeline Manager");
-                OnError("Creating blueprint failed", "Couldn't find Pipeline Manager");
-                return false;
-            }
-            
-            ApiWorld newWorld = new ApiWorld
-            {
-                id = apiWorld.id,
-                authorName = pipelineManager.user.displayName,
-                authorId = pipelineManager.user.id,
-                name = "New VRChat world", //temp
-                imageUrl = "",
-                assetUrl = newAssetUrl,
-                unityPackageUrl = newPackageUrl,
-                description = "A description", //temp
-                tags = new List<string>(), //temp
-                releaseStatus = ("private"), //temp
-                capacity = Convert.ToInt16(16), //temp
-                occupants = 0,
-                shouldAddToAuthor = true,
-                isCurated = false
-            };
-            
-            if (worldInfo != null)
-            {
-                newWorld.name = worldInfo.name;
-                newWorld.description = worldInfo.description;
-                newWorld.tags = worldInfo.tags.ToList();
-                newWorld.capacity = worldInfo.capacity;
+                apiAvatar.ApplyBlueprintInfo(avatarInfo);
 
-                if (worldInfo.newImagePath != "")
+                if (avatarInfo.newImagePath != "")
                 {
-                    newWorld.imageUrl = await UploadImage(newWorld, worldInfo.newImagePath);;
+                    string newImageUrl = await UploadImage(apiAvatar, avatarInfo.newImagePath);
+                    apiAvatar.imageUrl = newImageUrl;
                 }
             }
 
-            if (string.IsNullOrWhiteSpace(newWorld.imageUrl))
+            OnStatus("Applying Blueprint Changes");
+            
+            bool applied = false;
+            bool success = false;
+            
+            apiAvatar.Save(c =>
             {
-                newWorld.imageUrl = await UploadImage(newWorld, SaveImageTemp(new Texture2D(1200, 900)));
+                applied = true;
+                success = true;
+            }, c =>
+            {
+                applied = true;
+                LogError(c.Error);
+                OnError("Applying blueprint changes failed", c.Error);
+                success = false;
+            });
+
+            while (!applied)
+                await Task.Delay(33);
+
+            return success;
+        }
+
+        private async Task<bool> CreateWorldBlueprint(ApiWorld apiWorld, VRChatApiTools.WorldInfo worldInfo)
+        {
+            bool success = false;
+
+            apiWorld.name = worldInfo.name;
+            apiWorld.description = worldInfo.description;
+            apiWorld.tags = worldInfo.tags.ToList();
+            apiWorld.capacity = worldInfo.capacity;
+
+            if (worldInfo.newImagePath != "")
+            {
+                apiWorld.imageUrl = await UploadImage(apiWorld, worldInfo.newImagePath);
+            }
+
+            if (string.IsNullOrWhiteSpace(apiWorld.imageUrl))
+            {
+                apiWorld.imageUrl = await UploadImage(apiWorld, SaveImageTemp(new Texture2D(1200, 900)));
+            }
+
+            bool applied = false;
+
+            apiWorld.Post(
+                (c) =>
+                {
+                    ApiWorld savedBlueprint = (ApiWorld)c.Model;
+                    
+                    PipelineManager pipelineManager = VRChatApiTools.FindPipelineManager();
+                    if (pipelineManager == null)
+                    {
+                        pipelineManager.blueprintId = savedBlueprint.id;
+                        EditorUtility.SetDirty(pipelineManager);
+                    }
+
+                    applied = true;
+                    worldInfo.blueprintID = savedBlueprint.id;
+                    success = true;
+                },
+                (c) =>
+                {
+                    applied = true;
+                    Debug.LogError(c.Error);
+                    success = false;
+                    OnError("Creating blueprint failed", c.Error);
+                });
+
+            while (!applied)
+                await Task.Delay(100);
+
+            return success;
+        }
+
+        private async Task<bool> CreateAvatarBlueprint(ApiAvatar apiAvatar, VRChatApiTools.AvatarInfo avatarInfo)
+        {
+            bool success = false;
+
+            apiAvatar.name = avatarInfo.name;
+            apiAvatar.description = avatarInfo.description;
+            apiAvatar.tags = avatarInfo.tags.ToList();
+            
+            if (avatarInfo.newImagePath != "")
+            {
+                apiAvatar.imageUrl = await UploadImage(apiAvatar, avatarInfo.newImagePath);
+            }
+            
+            if (string.IsNullOrWhiteSpace(apiAvatar.imageUrl))
+            {
+                apiAvatar.imageUrl = await UploadImage(apiAvatar, SaveImageTemp(new Texture2D(1200, 900)));
             }
 
             bool applied = false;
             
-            newWorld.Post(
+            apiAvatar.Post(
                 (c) =>
                 {
                     ApiWorld savedBlueprint = (ApiWorld)c.Model;
-                    pipelineManager.blueprintId = savedBlueprint.id;
-                    EditorUtility.SetDirty(pipelineManager);
+                    
+                    //todo: save blueprint id to pipeline manager (this might be different for avatars, need to look into how the avatar sdk pipeline works)
+                    // PipelineManager pipelineManager = VRChatApiTools.FindPipelineManager();
+                    // if (pipelineManager == null)
+                    // {
+                    //     pipelineManager.blueprintId = savedBlueprint.id;
+                    //     EditorUtility.SetDirty(pipelineManager);
+                    // }
+                    
                     applied = true;
-                    if (worldInfo != null) worldInfo.blueprintID = savedBlueprint.id;
+                    avatarInfo.blueprintID = savedBlueprint.id;
                     success = true;
                 },
                 (c) =>
@@ -336,6 +497,7 @@ namespace BocuD.VRChatApiTools
             return success;
         }
         
+        #region Image Upload / Tools
         public async Task<string> UploadImage(ApiModel blueprint, string newImagePath)
         {
             string friendlyFileName;
@@ -377,6 +539,7 @@ namespace BocuD.VRChatApiTools
 
         private static string ImageName(int width, int height, string name, string savePath) =>
             $"{savePath}/{name}_{width}x{height}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.png";
+#endregion
 
         public async Task<string> UploadFile(string filePath, string existingFileUrl, string friendlyFileName, string fileType)
         {
@@ -397,6 +560,7 @@ namespace BocuD.VRChatApiTools
             ApiFileHelperAsync fileHelperAsync = new ApiFileHelperAsync();
 
             Stopwatch stopwatch = Stopwatch.StartNew();
+            
             newFileUrl = await fileHelperAsync.UploadFile(filePath, fileId, fileType, friendlyFileName,
                 (status, subStatus) => OnStatus(status, subStatus), (done, total) => OnUploadProgress(done, total),
                 cancelQuery);
@@ -408,20 +572,7 @@ namespace BocuD.VRChatApiTools
             return newFileUrl;
         }
 
-        private static string PrepareUnityPackageForS3(string packagePath, string blueprintId, int version, Platform platform, AssetVersion assetVersion)
-        {
-            string uploadUnityPackagePath =
-                $"{Application.temporaryCachePath}/{blueprintId}_{version}_{Application.unityVersion}_{assetVersion.ApiVersion}_{platform.ToApiString()}_{API.GetServerEnvironmentForApiUrl()}.unitypackage";
-
-            if (File.Exists(uploadUnityPackagePath))
-                File.Delete(uploadUnityPackagePath);
-
-            File.Copy(packagePath, uploadUnityPackagePath);
-
-            return uploadUnityPackagePath;
-        }
-
-        private static string PrepareVRCPathForS3(string assetBundlePath, string blueprintId, int version, Platform platform, AssetVersion assetVersion)
+        private static string FormatAssetBundle(string assetBundlePath, string blueprintId, int version, Platform platform, AssetVersion assetVersion)
         {
             string uploadVrcPath =
                 $"{Application.temporaryCachePath}/{blueprintId}_{version}_{Application.unityVersion}_{assetVersion.ApiVersion}_{platform.ToApiString()}_{API.GetServerEnvironmentForApiUrl()}{Path.GetExtension(assetBundlePath)}";
@@ -432,6 +583,19 @@ namespace BocuD.VRChatApiTools
             File.Copy(assetBundlePath, uploadVrcPath);
 
             return uploadVrcPath;
+        }
+        
+        private static string FormatUnityPackage(string packagePath, string blueprintId, int version, Platform platform, AssetVersion assetVersion)
+        {
+            string uploadUnityPackagePath =
+                $"{Application.temporaryCachePath}/{blueprintId}_{version}_{Application.unityVersion}_{assetVersion.ApiVersion}_{platform.ToApiString()}_{API.GetServerEnvironmentForApiUrl()}.unitypackage";
+
+            if (File.Exists(uploadUnityPackagePath))
+                File.Delete(uploadUnityPackagePath);
+
+            File.Copy(packagePath, uploadUnityPackagePath);
+
+            return uploadUnityPackagePath;
         }
     }
 }

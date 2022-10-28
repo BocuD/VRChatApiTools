@@ -387,18 +387,40 @@ namespace BocuD.VRChatApiTools
         [Serializable]
         public class BlueprintInfo
         {
-            public string name = "";
             public string blueprintID = "";
+            public string name = "";
             public string description = "";
-            public Texture2D newImage;
+            public List<string> tags = new List<string>();
+            
             public string newImagePath = "";
+            public Texture2D newImage;
         }
 
         [Serializable]
         public class WorldInfo : BlueprintInfo
         {
-            public List<string> tags = new List<string>();
             public int capacity;
+        }
+
+        [Serializable]
+        public class AvatarInfo : BlueprintInfo
+        {
+            
+        }
+        
+        public static void ApplyBlueprintInfo(this ApiWorld world, WorldInfo info)
+        {
+            world.name = info.name;
+            world.description = info.description;
+            world.tags = info.tags;
+            world.capacity = info.capacity;
+        }
+        
+        public static void ApplyBlueprintInfo(this ApiAvatar avatar, AvatarInfo info)
+        {
+            avatar.name = info.name;
+            avatar.description = info.description;
+            avatar.tags = info.tags;
         }
         
         public static Platform CurrentPlatform()
@@ -461,6 +483,7 @@ namespace BocuD.VRChatApiTools
             }
         }
 
+        //Currently unsure what the purpose of these are, they are reimplementations of the same functions in the SDK
         public static string GetFriendlyAvatarFileName(string type, string blueprintID, Platform platform) =>
             $"Avatar - {blueprintID} - {type} - {Application.unityVersion}_{ApiWorld.VERSION.ApiVersion}_{platform.ToApiString()}_{API.GetServerEnvironmentForApiUrl()}";
 
@@ -479,6 +502,16 @@ namespace BocuD.VRChatApiTools
                     return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
                 }
             }
+        }
+
+        public static string GenerateBlueprintID<T>() where T : ApiModel
+        {
+            if(typeof(T) == typeof(ApiWorld))
+                return $"wrld_{Guid.NewGuid()}";
+            if(typeof(T) == typeof(ApiAvatar))
+                return $"avtr_{Guid.NewGuid()}";
+            
+            throw new Exception("Invalid type provided to GenerateBlueprintID");
         }
     }
     
