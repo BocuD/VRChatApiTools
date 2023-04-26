@@ -85,8 +85,8 @@ namespace BocuD.VRChatApiTools
 
             if (!APIUser.IsLoggedIn)
                 yield break;
-
-            ApiCache.ClearResponseCache();
+            
+            ApiCache.Clear();
             VRCCachedWebRequest.ClearOld();
 
             if (fetchingAvatars == null)

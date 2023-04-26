@@ -61,7 +61,7 @@ namespace BocuD.VRChatApiTools
                         currentlyFetching.Remove(world.id);
                         invalidBlueprints.Add(world.id);
                         Logger.Log($"World '{blueprintID}' doesn't exist so couldn't be loaded.");
-                        ApiCache.Invalidate<ApiWorld>(blueprintID);
+                        ApiCache.Invalidate(blueprintID);
                     }
                     else
                         currentlyFetching.Remove(world.id);
@@ -85,7 +85,7 @@ namespace BocuD.VRChatApiTools
                     if (c.Code == 404)
                     {
                         Logger.Log($"World '{blueprintID}' doesn't exist so couldn't be loaded.");
-                        ApiCache.Invalidate<ApiWorld>(blueprintID);
+                        ApiCache.Invalidate(blueprintID);
                     }
                     else
                     {
@@ -120,7 +120,7 @@ namespace BocuD.VRChatApiTools
                         currentlyFetching.Remove(avatar.id);
                         invalidBlueprints.Add(avatar.id);
                         Logger.Log($"Avatar '{blueprintID}' doesn't exist so couldn't be loaded.");
-                        ApiCache.Invalidate<ApiAvatar>(blueprintID);
+                        ApiCache.Invalidate(blueprintID);
                     }
                     else
                         currentlyFetching.Remove(avatar.id);
@@ -144,7 +144,7 @@ namespace BocuD.VRChatApiTools
                     if (c.Code == 404)
                     {
                         Logger.Log($"Avatar '{blueprintID}' doesn't exist so couldn't be loaded.");
-                        ApiCache.Invalidate<ApiAvatar>(blueprintID);
+                        ApiCache.Invalidate(blueprintID);
                     }
                     
                     result = c;
