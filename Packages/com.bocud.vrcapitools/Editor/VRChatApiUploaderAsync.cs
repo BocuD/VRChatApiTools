@@ -80,8 +80,8 @@ namespace BocuD.VRChatApiTools
             blueprint.Save(
                 c =>
                 {
-                    if (blueprint is ApiAvatar) AnalyticsSDK.AvatarUploaded(blueprint, true);
-                    else AnalyticsSDK.WorldUploaded(blueprint, true);
+                    if (blueprint is ApiAvatar) AnalyticsSDK.AvatarUploadFailed(blueprint.id, true);
+                    else AnalyticsSDK.WorldUploadFailed(blueprint.id, true);
                     doneUploading = true;
                     success = true;
                 },
