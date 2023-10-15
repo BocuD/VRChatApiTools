@@ -172,6 +172,9 @@ namespace BocuD.VRChatApiTools
                 apiWorld.id = pipelineManager.blueprintId;
             }
 
+            if (apiWorld.capacity < apiWorld.recommendedCapacity)
+            apiWorld.capacity = apiWorld.recommendedCapacity;
+
             await UploadWorldData(apiWorld, uploadUnityPackagePath, uploadVrcPath, isUpdate, VRChatApiTools.CurrentPlatform(), worldInfo);
             
             return apiWorld.id;

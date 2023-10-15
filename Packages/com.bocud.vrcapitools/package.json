@@ -1,10 +1,14 @@
 {
   "name": "com.bocud.vrcapitools",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "displayName": "VRChatApiTools",
   "author": {
     "name": "BocuD",
     "url": "https://github.com/BocuD"
+  },
+  "vpmDependencies": {
+    "com.vrchat.base": "^3.4.x",
+    "com.vrchat.worlds": "^3.4.x",
   },
   "description": "A library to interact with and extend the VRChat SDK inside Unity",
   "type": "library",
