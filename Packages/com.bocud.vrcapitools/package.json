@@ -8,7 +8,7 @@
   },
   "vpmDependencies": {
     "com.vrchat.base": "^3.4.x",
-    "com.vrchat.worlds": "^3.4.x",
+    "com.vrchat.worlds": "^3.4.x"
   },
   "description": "A library to interact with and extend the VRChat SDK inside Unity",
   "type": "library",
