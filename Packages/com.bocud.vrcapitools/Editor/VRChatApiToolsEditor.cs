@@ -122,7 +122,7 @@ namespace BocuD.VRChatApiTools
                     Logger.LogError("Couldn't fetch world list:\n" + obj);
                     fetchingWorlds = null;
                 },
-                ApiWorld.SortHeading.Updated,
+                "updated",
                 ApiWorld.SortOwnership.Mine,
                 ApiWorld.SortOrder.Descending,
                 offset,
